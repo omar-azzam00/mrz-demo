@@ -1,3 +1,11 @@
+// 1- refactor fluid element so there is only handle....... methods and the bindings are
+// done in the constructor and there is only a destroy method that removes the listeners
+
+// 2- use percentages for top and left instead of pxs for the elements to stay at
+// its same place when zoomed in or out
+
+// note we will use the default browser scroll, zoom in, and zoom out for our application.
+
 // this code now can drag an element but it can go outside of borders which is a problem still.
 // we need also to implement resize, zoom in and zoom out
 
@@ -26,42 +34,20 @@ class FluidElement {
         this.element = element;
         this.pointerDown = false;
 
-        this.AddPointerDownEventListener();
-        this.AddPointerMoveEventListener();
-        this.AddPointerUpEventListener();
-    }
-
-    AddPointerDownEventListener(destroy = false) {
-        if (destroy) {
-            console.log("Removing pointerdown event listener");
-            this.element.removeEventListener(
-                "pointerdown",
-                this.handlePointerDown
-            );
-            return;
-        }
-
-        console.log("Adding pointerdown event listener");
         this.handlePointerDown = this.handlePointerDown.bind(this);
-        this.element.addEventListener("pointerdown", this.handlePointerDown);
+        element.addEventListener("pointerdown", this.handlePointerDown);
+
+        this.handlePointerMove = this.handlePointerMove.bind(this);
+        window.addEventListener("pointermove", this.handlePointerMove);
+
+        this.handlePointerUp = this.handlePointerUp.bind(this);
+        window.addEventListener("pointerup", this.handlePointerUp);
     }
 
     handlePointerDown(e) {
         console.log("Pointer down event triggered");
         e.preventDefault();
         this.pointerDown = true;
-    }
-
-    AddPointerMoveEventListener(destroy = false) {
-        if (destroy) {
-            console.log("Removing pointermove event listener");
-            window.removeEventListener("pointermove", this.handlePointerMove);
-            return;
-        }
-
-        console.log("Adding pointermove event listener");
-        this.handlePointerMove = this.handlePointerMove.bind(this);
-        window.addEventListener("pointermove", this.handlePointerMove);
     }
 
     handlePointerMove(e) {
@@ -81,18 +67,6 @@ class FluidElement {
         }
     }
 
-    AddPointerUpEventListener(destroy = false) {
-        if (destroy) {
-            console.log("Removing pointerup event listener");
-            window.removeEventListener("pointerup", this.handlePointerUp);
-            return;
-        }
-
-        console.log("Adding pointerup event listener");
-        this.handlePointerUp = this.handlePointerUp.bind(this);
-        window.addEventListener("pointerup", this.handlePointerUp);
-    }
-
     handlePointerUp(e) {
         console.log("Pointer up event triggered");
         e.preventDefault();
@@ -101,9 +75,9 @@ class FluidElement {
 
     destroy() {
         console.log("Destroying FluidElement - removing all event listeners");
-        this.AddPointerDownEventListener(true);
-        this.AddPointerMoveEventListener(true);
-        this.AddPointerUpEventListener(true);
+        this.element.removeEventListener("pointerdown", this.handlePointerDown);
+        window.removeEventListener("pointermove", this.handlePointerMove);
+        window.removeEventListener("pointerup", this.handlePointerUp);
     }
 }
 
