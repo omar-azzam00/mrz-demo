@@ -1,49 +1,42 @@
+// 1- refactor fluid element so there is only handle....... methods and the bindings are
+// done in the constructor and there is only a destroy method that removes the listeners
+
+// 2- use percentages for top and left instead of pxs for the elements to stay at
+// its same place when zoomed in or out
+
+// note we will use the default browser scroll, zoom in, and zoom out for our application.
+
 // this code now can drag an element but it can go outside of borders which is a problem still.
 // we need also to implement resize, zoom in and zoom out
 
 "use strict";
 
+document.body.style.width = '100vw';
+document.body.style.height = '100vh';
 class FluidElement {
     constructor(element) {
         if (!(element instanceof HTMLElement)) {
             throw TypeError("element is expected to be an HTMLElement!");
         }
 
-        // this.element = element;
-        // this.pointerDown = false;
-        // this.startX = element.offsetLeft;
-        // this.startY = element.offsetTop;
-
-        element.style.position = "fixed";
-
-        if (!element.style.left) {
-            element.style.left = "0px";
-        }
-        if (!element.style.top) {
-            element.style.top = "0px";
-        }
-
         this.element = element;
         this.pointerDown = false;
+        this.initElementPos();
 
-        this.AddPointerDownEventListener();
-        this.AddPointerMoveEventListener();
-        this.AddPointerUpEventListener();
+        this.handlePointerDown = this.handlePointerDown.bind(this);
+        element.addEventListener("pointerdown", this.handlePointerDown);
+
+        this.handlePointerMove = this.handlePointerMove.bind(this);
+        window.addEventListener("pointermove", this.handlePointerMove);
+
+        this.handlePointerUp = this.handlePointerUp.bind(this);
+        window.addEventListener("pointerup", this.handlePointerUp);
     }
 
-    AddPointerDownEventListener(destroy = false) {
-        if (destroy) {
-            console.log("Removing pointerdown event listener");
-            this.element.removeEventListener(
-                "pointerdown",
-                this.handlePointerDown
-            );
-            return;
-        }
-
-        console.log("Adding pointerdown event listener");
-        this.handlePointerDown = this.handlePointerDown.bind(this);
-        this.element.addEventListener("pointerdown", this.handlePointerDown);
+    initElementPos() {
+        this.element.style.position = "fixed";
+        this.element.style.left = "0%";
+        this.element.style.top = "0%";
     }
 
     handlePointerDown(e) {
@@ -52,45 +45,61 @@ class FluidElement {
         this.pointerDown = true;
     }
 
-    AddPointerMoveEventListener(destroy = false) {
-        if (destroy) {
-            console.log("Removing pointermove event listener");
-            window.removeEventListener("pointermove", this.handlePointerMove);
-            return;
-        }
-
-        console.log("Adding pointermove event listener");
-        this.handlePointerMove = this.handlePointerMove.bind(this);
-        window.addEventListener("pointermove", this.handlePointerMove);
-    }
-
     handlePointerMove(e) {
         e.preventDefault();
         if (this.pointerDown) {
             console.log(
                 `Moving element - movementX: ${e.movementX}, movementY: ${e.movementY}`
             );
-            this.element.style.left =
-                Number(this.element.style.left.slice(0, -2)) +
-                e.movementX +
-                "px";
-            this.element.style.top =
-                Number(this.element.style.top.slice(0, -2)) +
-                e.movementY +
-                "px";
-        }
-    }
 
-    AddPointerUpEventListener(destroy = false) {
-        if (destroy) {
-            console.log("Removing pointerup event listener");
-            window.removeEventListener("pointerup", this.handlePointerUp);
-            return;
-        }
+            const sensitivity = 100;
 
-        console.log("Adding pointerup event listener");
-        this.handlePointerUp = this.handlePointerUp.bind(this);
-        window.addEventListener("pointerup", this.handlePointerUp);
+            // LEFT (horizontal) movement and bounds
+            let leftPerc =
+                (e.movementX / this.element.parentElement.offsetWidth) *
+                    sensitivity +
+                Number(this.element.style.left.slice(0, -1));
+            let leftPxs = leftPerc / 100 * this.element.parentElement.offsetWidth;
+            let leftDiff = leftPxs + this.element.offsetWidth - this.element.parentElement.offsetWidth;
+
+            console.log("Left pxs: " + leftPxs);
+            console.log("Parent Width: " + this.element.parentElement.offsetWidth);
+            console.log("Left diff: " + leftDiff);
+
+            if (leftPerc < 0) {
+                leftPerc = 0; 
+            }
+
+            if (leftDiff > 0) {
+                leftPxs -= leftDiff;
+                leftPerc = leftPxs * 100 / this.element.parentElement.offsetWidth;
+            }
+
+            this.element.style.left = leftPerc + "%";
+
+            // TOP (vertical) movement and bounds (same logic as left)
+            let topPerc =
+                (e.movementY / this.element.parentElement.offsetHeight) *
+                    sensitivity +
+                Number(this.element.style.top.slice(0, -1));
+            let topPxs = topPerc / 100 * this.element.parentElement.offsetHeight;
+            let topDiff = topPxs + this.element.offsetHeight - this.element.parentElement.offsetHeight;
+
+            console.log("Top pxs: " + topPxs);
+            console.log("Parent Height: " + this.element.parentElement.offsetHeight);
+            console.log("Top diff: " + topDiff);
+
+            if (topPerc < 0) {
+                topPerc = 0;
+            }
+
+            if (topDiff > 0) {
+                topPxs -= topDiff;
+                topPerc = topPxs * 100 / this.element.parentElement.offsetHeight;
+            }
+
+            this.element.style.top = topPerc + "%";
+        }
     }
 
     handlePointerUp(e) {
@@ -101,15 +110,15 @@ class FluidElement {
 
     destroy() {
         console.log("Destroying FluidElement - removing all event listeners");
-        this.AddPointerDownEventListener(true);
-        this.AddPointerMoveEventListener(true);
-        this.AddPointerUpEventListener(true);
+        this.element.removeEventListener("pointerdown", this.handlePointerDown);
+        window.removeEventListener("pointermove", this.handlePointerMove);
+        window.removeEventListener("pointerup", this.handlePointerUp);
     }
 }
 
 let img = document.images[0];
 let fluidImg = new FluidElement(img);
 
-setTimeout(function () {
-    fluidImg.destroy();
-}, 10000);
+// setTimeout(function () {
+//     fluidImg.destroy();
+// }, 10000);
