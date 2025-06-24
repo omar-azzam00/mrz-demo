@@ -11,12 +11,14 @@
 
 "use strict";
 
+document.body.style.width = '100vw';
+document.body.style.height = '100vh';
 class FluidElement {
     constructor(element) {
         if (!(element instanceof HTMLElement)) {
             throw TypeError("element is expected to be an HTMLElement!");
         }
-        
+
         this.element = element;
         this.pointerDown = false;
         this.initElementPos();
@@ -31,7 +33,7 @@ class FluidElement {
         window.addEventListener("pointerup", this.handlePointerUp);
     }
 
-    initElementPos(){
+    initElementPos() {
         this.element.style.position = "fixed";
         this.element.style.left = "0%";
         this.element.style.top = "0%";
@@ -52,12 +54,51 @@ class FluidElement {
 
             const sensitivity = 100;
 
-            this.element.style.left = e.movementX / (this.element.parentElement.offsetWidth) * sensitivity +
-            Number(this.element.style.left.slice(0, -1)) +
-            "%";
-            this.element.style.top = e.movementY / (this.element.parentElement.offsetHeight) * sensitivity +
-            Number(this.element.style.top.slice(0, -1)) +
-            "%";
+            // LEFT (horizontal) movement and bounds
+            let leftPerc =
+                (e.movementX / this.element.parentElement.offsetWidth) *
+                    sensitivity +
+                Number(this.element.style.left.slice(0, -1));
+            let leftPxs = leftPerc / 100 * this.element.parentElement.offsetWidth;
+            let leftDiff = leftPxs + this.element.offsetWidth - this.element.parentElement.offsetWidth;
+
+            console.log("Left pxs: " + leftPxs);
+            console.log("Parent Width: " + this.element.parentElement.offsetWidth);
+            console.log("Left diff: " + leftDiff);
+
+            if (leftPerc < 0) {
+                leftPerc = 0; 
+            }
+
+            if (leftDiff > 0) {
+                leftPxs -= leftDiff;
+                leftPerc = leftPxs * 100 / this.element.parentElement.offsetWidth;
+            }
+
+            this.element.style.left = leftPerc + "%";
+
+            // TOP (vertical) movement and bounds (same logic as left)
+            let topPerc =
+                (e.movementY / this.element.parentElement.offsetHeight) *
+                    sensitivity +
+                Number(this.element.style.top.slice(0, -1));
+            let topPxs = topPerc / 100 * this.element.parentElement.offsetHeight;
+            let topDiff = topPxs + this.element.offsetHeight - this.element.parentElement.offsetHeight;
+
+            console.log("Top pxs: " + topPxs);
+            console.log("Parent Height: " + this.element.parentElement.offsetHeight);
+            console.log("Top diff: " + topDiff);
+
+            if (topPerc < 0) {
+                topPerc = 0;
+            }
+
+            if (topDiff > 0) {
+                topPxs -= topDiff;
+                topPerc = topPxs * 100 / this.element.parentElement.offsetHeight;
+            }
+
+            this.element.style.top = topPerc + "%";
         }
     }
 
@@ -78,6 +119,6 @@ class FluidElement {
 let img = document.images[0];
 let fluidImg = new FluidElement(img);
 
-setTimeout(function () {
-    fluidImg.destroy();
-}, 10000);
+// setTimeout(function () {
+//     fluidImg.destroy();
+// }, 10000);
