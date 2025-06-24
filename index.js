@@ -33,8 +33,8 @@ class FluidElement {
 
     initElementPos(){
         this.element.style.position = "fixed";
-        this.element.style.left = "0px";
-        this.element.style.top = "0px";
+        this.element.style.left = "0%";
+        this.element.style.top = "0%";
     }
 
     handlePointerDown(e) {
@@ -49,14 +49,15 @@ class FluidElement {
             console.log(
                 `Moving element - movementX: ${e.movementX}, movementY: ${e.movementY}`
             );
-            this.element.style.left =
-                Number(this.element.style.left.slice(0, -2)) +
-                e.movementX +
-                "px";
-            this.element.style.top =
-                Number(this.element.style.top.slice(0, -2)) +
-                e.movementY +
-                "px";
+
+            const sensitivity = 100;
+
+            this.element.style.left = e.movementX / (this.element.parentElement.offsetWidth) * sensitivity +
+            Number(this.element.style.left.slice(0, -1)) +
+            "%";
+            this.element.style.top = e.movementY / (this.element.parentElement.offsetHeight) * sensitivity +
+            Number(this.element.style.top.slice(0, -1)) +
+            "%";
         }
     }
 
