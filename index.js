@@ -16,23 +16,10 @@ class FluidElement {
         if (!(element instanceof HTMLElement)) {
             throw TypeError("element is expected to be an HTMLElement!");
         }
-
-        // this.element = element;
-        // this.pointerDown = false;
-        // this.startX = element.offsetLeft;
-        // this.startY = element.offsetTop;
-
-        element.style.position = "fixed";
-
-        if (!element.style.left) {
-            element.style.left = "0px";
-        }
-        if (!element.style.top) {
-            element.style.top = "0px";
-        }
-
+        
         this.element = element;
         this.pointerDown = false;
+        this.initElementPos();
 
         this.handlePointerDown = this.handlePointerDown.bind(this);
         element.addEventListener("pointerdown", this.handlePointerDown);
@@ -42,6 +29,12 @@ class FluidElement {
 
         this.handlePointerUp = this.handlePointerUp.bind(this);
         window.addEventListener("pointerup", this.handlePointerUp);
+    }
+
+    initElementPos(){
+        this.element.style.position = "fixed";
+        this.element.style.left = "0px";
+        this.element.style.top = "0px";
     }
 
     handlePointerDown(e) {
